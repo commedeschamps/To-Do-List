@@ -4,80 +4,24 @@ struct TaskCardView: View {
     let todo: TodoItem
     let onToggleDone: () -> Void
     let onDelete: () -> Void
-    
-    var body: some View {
-        Button(action: onToggleDone) {
-            HStack(spacing: 12) {
-               
-                Image(systemName: todo.isDone ? "checkmark.circle.fill" : "circle")
-                    .font(.title3)
-                    .foregroundStyle(todo.isDone ? .green : .gray)
-                    .scaleEffect(todo.isDone ? 1.1 : 1.0)
-                    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: todo.isDone)
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    
-                    Text(todo.title)
-                        .font(.headline)
-                        .strikethrough(todo.isDone)
-                        .foregroundStyle(todo.isDone ? .secondary : .primary)
-                    
-                    
-                    HStack(spacing: 6) {
-                        Image(systemName: todo.priority.iconName)
-                            .font(.caption)
-                            .foregroundStyle(priorityColor)
-                        Text(todo.priority.rawValue)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                
-                Spacer()
-                
-               
-                Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-            }
-            .padding(14)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                (todo.isDone ? AnyShapeStyle(Color.green.opacity(0.05)) : AnyShapeStyle(.ultraThinMaterial))
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .shadow(radius: todo.isDone ? 2 : 4, y: 2)
-            .scaleEffect(todo.isDone ? 0.98 : 1.0)
-            .animation(.easeInOut(duration: 0.2), value: todo.isDone)
-        }
-        .buttonStyle(.plain)
-        
-        .contextMenu {
-            
-            Button {
-                onToggleDone()
-            } label: {
-                Label(
-                    todo.isDone ? "Mark as Incomplete" : "Mark as Complete", 
-                    systemImage: todo.isDone ? "circle" : "checkmark.circle"
-                )
-            }
-            
-            
-            Divider()
-            
-           
-            Button(role: .destructive) {
-                onDelete()
-            } label: {
-                Label("Delete", systemImage: "trash")
+
+    private var statusIcon: some View {
+        ZStack {
+            Circle()
+                .strokeBorder(.secondary.opacity(todo.isDone ? 0 : 0.35), lineWidth: 2)
+
+            if todo.isDone {
+                Circle()
+                    .fill(.green.opacity(0.18))
+
+                Image(systemName: "checkmark")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(.green)
             }
         }
-        
-        .help("Press and hold for more options")
+        .frame(width: 28, height: 28)
     }
-    
-    
+
     private var priorityColor: Color {
         switch todo.priority {
         case .low:
@@ -86,6 +30,36 @@ struct TaskCardView: View {
             return .orange
         case .high:
             return .red
+        default:
+            return .secondary
+        }
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            statusIcon
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(todo.title)
+                    .font(.callout.weight(.semibold))
+                    .strikethrough(todo.isDone, color: .secondary)
+                    .foregroundStyle(todo.isDone ? .secondary : .primary)
+
+                Text(todo.priority.rawValue.capitalized)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(priorityColor)
+                    .textCase(.uppercase)
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .font(.body.weight(.semibold))
+                .foregroundStyle(.tertiary)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            onToggleDone()
         }
     }
 }
