@@ -8,7 +8,7 @@ struct ContentView: View {
     ]
     @State private var isShowingAddSheet = false
     @State private var filter: TodoFilter = .all
-
+    
     var body: some View {
         NavigationStack {
             VStack(spacing: 12) {
@@ -22,7 +22,7 @@ struct ContentView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal)
                 .padding(.top)
-
+                
                 Picker("Filter", selection: $filter) {
                     ForEach(TodoFilter.allCases) { f in
                         Text(f.rawValue).tag(f)
@@ -30,7 +30,7 @@ struct ContentView: View {
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
-
+                
                 List {
                     ForEach(todos.indices, id: \.self) { i in
                         if shouldShow(todos[i]) {
@@ -38,16 +38,31 @@ struct ContentView: View {
                                 title: todos[i].title,
                                 isDone: todos[i].isDone,
                                 priority: todos[i].priority,
-                                onToggleDone: { todos[i].isDone.toggle() }
+                                onToggleDone: {
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                        todos[i].isDone.toggle()
+                                    }
+                                }
                             )
                             .listRowInsets(EdgeInsets())
                             .listRowBackground(Color.clear)
                             .padding(.vertical, 4)
                             .padding(.horizontal)
+                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                Button(role: .destructive) {
+                                    withAnimation {
+                                        deleteTask(at: i)
+                                    }
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                            }
                         }
                     }
                     .onDelete { indexSet in
-                        todos.remove(atOffsets: indexSet)
+                        withAnimation {
+                            todos.remove(atOffsets: indexSet)
+                        }
                     }
                 }
                 .listStyle(.plain)
@@ -56,31 +71,40 @@ struct ContentView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Add sample") {
-                        todos.append(TodoItem(title: "Task \(todos.count + 1)", isDone: false, priority: .medium))
+                        withAnimation {
+                            todos.append(TodoItem(title: "Task \(todos.count + 1)", isDone: false, priority: .medium))
+                        }
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Add") {
+                    Button("Add", systemImage: "plus") {
                         isShowingAddSheet = true
                     }
                 }
             }
             .sheet(isPresented: $isShowingAddSheet) {
                 AddTodoSheetView { title, priority in
-                    todos.append(TodoItem(title: title, isDone: false, priority: priority))
+                    withAnimation {
+                        todos.append(TodoItem(title: title, isDone: false, priority: priority))
+                    }
                 }
             }
         }
     }
-
+    
+    private func deleteTask(at index: Int) {
+        guard index < todos.count else { return }
+        todos.remove(at: index)
+    }
+    
     private var shownCount: Int {
         todos.filter { shouldShow($0) }.count
     }
-
+    
     private var activeCount: Int {
         todos.filter { !$0.isDone }.count
     }
-
+    
     private func shouldShow(_ item: TodoItem) -> Bool {
         switch filter {
         case .all:
@@ -92,7 +116,6 @@ struct ContentView: View {
         }
     }
 }
-
 
 #Preview {
     ContentView()
