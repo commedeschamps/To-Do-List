@@ -12,7 +12,6 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 12) {
-                // Header
                 VStack(alignment: .leading, spacing: 4) {
                     Text("My Tasks")
                         .font(.largeTitle.bold())
@@ -24,7 +23,6 @@ struct ContentView: View {
                 .padding(.horizontal)
                 .padding(.top)
 
-                // Filter picker
                 Picker("Filter", selection: $filter) {
                     ForEach(TodoFilter.allCases) { f in
                         Text(f.rawValue).tag(f)
@@ -33,7 +31,6 @@ struct ContentView: View {
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
 
-                // List of tasks using card style
                 List {
                     ForEach(todos.indices, id: \.self) { i in
                         if shouldShow(todos[i]) {
@@ -69,8 +66,8 @@ struct ContentView: View {
                 }
             }
             .sheet(isPresented: $isShowingAddSheet) {
-                AddTodoSheetView { title in
-                    todos.append(TodoItem(title: title, isDone: false, priority: .medium))
+                AddTodoSheetView { title, priority in
+                    todos.append(TodoItem(title: title, isDone: false, priority: priority))
                 }
             }
         }
@@ -100,13 +97,21 @@ struct ContentView: View {
 struct AddTodoSheetView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var title: String = ""
+    @State private var priority: TaskPriority = .medium
 
-    let onAdd: (String) -> Void
+    let onAdd: (String, TaskPriority) -> Void
 
     var body: some View {
         NavigationStack {
             Form {
                 TextField("Title", text: $title)
+
+                Picker("Priority", selection: $priority) {
+                    ForEach(TaskPriority.allCases, id: \.self) { p in
+                        Text(p.rawValue.capitalized)
+                    }
+                }
+                .pickerStyle(.segmented)
             }
             .navigationTitle("New Task")
             .toolbar {
@@ -117,7 +122,7 @@ struct AddTodoSheetView: View {
                     Button("Save") {
                         let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
                         guard !trimmed.isEmpty else { return }
-                        onAdd(trimmed)
+                        onAdd(trimmed, priority)
                         dismiss()
                     }
                 }
