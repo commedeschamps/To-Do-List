@@ -13,8 +13,8 @@ struct AddTodoSheetView: View {
                 TextField("Title", text: $title)
 
                 Picker("Priority", selection: $priority) {
-                    ForEach(TaskPriority.allCases, id: \.self) { p in
-                        Text(p.rawValue.capitalized)
+                    ForEach(TaskPriority.allCases) { p in
+                        Text(p.rawValue).tag(p)
                     }
                 }
                 .pickerStyle(.segmented)
@@ -31,6 +31,7 @@ struct AddTodoSheetView: View {
                         onAdd(trimmed, priority)
                         dismiss()
                     }
+                    .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
             }
         }
