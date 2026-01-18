@@ -42,7 +42,9 @@ struct TaskCardView: View {
             }
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(todo.isDone ? Color.green.opacity(0.05) : .ultraThinMaterial)
+            .background(
+                (todo.isDone ? AnyShapeStyle(Color.green.opacity(0.05)) : AnyShapeStyle(.ultraThinMaterial))
+            )
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             .shadow(radius: todo.isDone ? 2 : 4, y: 2)
             .scaleEffect(todo.isDone ? 0.98 : 1.0)
@@ -87,3 +89,4 @@ struct TaskCardView: View {
         }
     }
 }
+
