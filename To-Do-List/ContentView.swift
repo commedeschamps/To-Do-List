@@ -12,6 +12,7 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 12) {
+                
                 VStack(alignment: .leading, spacing: 4) {
                     Text("My Tasks")
                         .font(.largeTitle.bold())
@@ -23,6 +24,7 @@ struct ContentView: View {
                 .padding(.horizontal)
                 .padding(.top)
                 
+               
                 Picker("Filter", selection: $filter) {
                     ForEach(TodoFilter.allCases) { f in
                         Text(f.rawValue).tag(f)
@@ -31,16 +33,22 @@ struct ContentView: View {
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
                 
+                
                 List {
                     ForEach(todos.indices, id: \.self) { i in
                         if shouldShow(todos[i]) {
                             TaskCardView(
-                                title: todos[i].title,
-                                isDone: todos[i].isDone,
-                                priority: todos[i].priority,
+                                todo: todos[i],
                                 onToggleDone: {
+                                    
                                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                         todos[i].isDone.toggle()
+                                    }
+                                },
+                                onDelete: {
+                                    
+                                    withAnimation {
+                                        deleteTask(at: i)
                                     }
                                 }
                             )
@@ -48,6 +56,7 @@ struct ContentView: View {
                             .listRowBackground(Color.clear)
                             .padding(.vertical, 4)
                             .padding(.horizontal)
+                            
                             .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                 Button(role: .destructive) {
                                     withAnimation {
@@ -57,8 +66,21 @@ struct ContentView: View {
                                     Label("Delete", systemImage: "trash")
                                 }
                             }
+                            
+                            .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                                Button {
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                        todos[i].isDone.toggle()
+                                    }
+                                } label: {
+                                    Label(todos[i].isDone ? "Undo" : "Complete", 
+                                          systemImage: todos[i].isDone ? "arrow.uturn.backward" : "checkmark")
+                                }
+                                .tint(todos[i].isDone ? .gray : .green)
+                            }
                         }
                     }
+                    
                     .onDelete { indexSet in
                         withAnimation {
                             todos.remove(atOffsets: indexSet)
@@ -69,41 +91,51 @@ struct ContentView: View {
             }
             .navigationTitle("To-do List")
             .toolbar {
+                
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Add sample") {
                         withAnimation {
-                            todos.append(TodoItem(title: "Task \(todos.count + 1)", isDone: false, priority: .medium))
+                            todos.append(TodoItem(
+                                title: "Task \(todos.count + 1)", 
+                                isDone: false, 
+                                priority: .medium
+                            ))
                         }
                     }
                 }
+               
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Add", systemImage: "plus") {
                         isShowingAddSheet = true
                     }
                 }
             }
+            
             .sheet(isPresented: $isShowingAddSheet) {
                 AddTodoSheetView { title, priority in
                     withAnimation {
-                        todos.append(TodoItem(title: title, isDone: false, priority: priority))
+                        todos.append(TodoItem(
+                            title: title, 
+                            isDone: false, 
+                            priority: priority
+                        ))
                     }
                 }
             }
         }
     }
     
+    
     private func deleteTask(at index: Int) {
         guard index < todos.count else { return }
         todos.remove(at: index)
     }
     
-    private var shownCount: Int {
-        todos.filter { shouldShow($0) }.count
-    }
     
     private var activeCount: Int {
         todos.filter { !$0.isDone }.count
     }
+    
     
     private func shouldShow(_ item: TodoItem) -> Bool {
         switch filter {
